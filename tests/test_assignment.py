@@ -1,9 +1,6 @@
 import pytest
 from pyspark.sql import SparkSession
-from functions import load_csv_in_spark
-from functions import filter_column_by_list
-from functions import remove_columns
-from functions import rename_columns
+from kommatipara.utils import *
 
 
 @pytest.fixture(scope="module")

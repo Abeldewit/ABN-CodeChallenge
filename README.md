@@ -1,40 +1,74 @@
-# Programming Exercise using PySpark
+# KommatiPara Client Data Collation
 
-## Background:
-A very small company called **KommatiPara** that deals with bitcoin trading has two separate datasets dealing with clients that they want to collate to starting interfacing more with their clients. One dataset contains information about the clients and the other one contains information about their financial details.
+## Overview
 
-The company now needs a dataset containing the emails of the clients from the United Kingdom and the Netherlands and some of their financial details to starting reaching out to them for a new marketing push.
+This Python project is designed to collate and transform two separate datasets containing information about clients and their financial details for a fictitious company called KommatiPara, which deals with bitcoin trading. The goal of this project is to create a new dataset containing client emails from the United Kingdom and the Netherlands, along with relevant financial details, to support a marketing push.
 
-Since all the data in the datasets is fake and this is just an exercise, one can forego the issue of having the data stored along with the code in a code repository.
+**Note:** The data used in this project is entirely fake and is intended for demonstration purposes only.
 
+## Requirements
 
-## Things to be aware:
+- Python 3.8
+- PySpark
+- (Optional) Other dependencies specified in the requirements file
 
-- Use Python **3.8**
-- Avoid using notebooks, like **Jupyter** for instance. While these are good for interactive work and/or prototyping in this case they shouldn't be used.
-- There's no need to use classes, because the assignment is quite small and not very complex in what it does classes are unnecessary.
-- Only use clients from the **United Kingdom** or the **Netherlands**.
-- Remove personal identifiable information from the first dataset, **excluding emails**.
-- Remove credit card number from the second dataset.
-- Data should be joined using the **id** field.
-- Rename the columns for the easier readability to the business users:
+## Usage
 
-|Old name|New name|
-|--|--|
-|id|client_identifier|
-|btc_a|bitcoin_address|
-|cc_t|credit_card_type|
+To run this application, first install the kommatipara package.
+```bash
+python -m build ./src/
+```
 
-- The project should be stored in GitHub and you should only commit relevant files to the repo.
-- Save the output in a **client_data** directory in the root directory of the project.
-- Add a **README** file explaining on a high level what the application does.
-- Application should receive three arguments, the paths to each of the dataset files and also the countries to filter as the client wants to reuse the code for other countries.
-- Use **logging**.
-- Create generic functions for filtering data and renaming.
-Recommendation: Use the following package for Spark tests - https://github.com/MrPowers/chispa
-- If possible, have different branches for different tasks that once completed are merged to the main branch. Follow the GitHub flow - https://guides.github.com/introduction/flow/.
-- **Bonus** - If possible it should have an automated build pipeline using GitHub Actions - https://docs.github.com/en/actions - or Travis - https://www.travis-ci.com/ for instance.
-- **Bonus** - If possible log to a file with a rotating policy.
-- **Bonus** - Code should be able to be packaged into a source distribution file.
-- **Bonus** - Requirements file should exist.
-- **Bonus** - Document the code with docstrings as much as possible using the reStructuredText (reST) format.
+After installing the package, you can run the pipeline with the following command:
+
+```bash
+python -m kommatipara <client_data_file_path> <financial_data_file_path> <country_filter>
+```
+
+`<client_data_file_path>`: The path to the CSV file containing client information.
+`<financial_data_file_path>`: The path to the CSV file containing financial information.
+`<country_filter>`: The country filter to specify the target countries (e.g., "UK" or "Netherlands").
+
+alternatively you can run the `__main__.py` file directly without installing the package. First install the project dependencies using:
+
+```bash
+python -m pip install -r requirements.txt
+```
+
+After this you can run the project using the following command:
+
+```bash
+python src/kommatipara/__main__.py <client_data_file_path> <financial_data_file_path> <country_filter>
+```
+
+## Project Structure
+The project is organized as follows:
+
+**main.py**: The main Python script to execute the data collation process.
+
+**utils.p**y: Contains generic functions for data filtering and renaming.
+
+**client_data/**: The directory where the output dataset will be saved.
+
+**requirements.txt**: A file listing project dependencies.
+
+**README.md**: This documentation file.
+
+## Data Processing
+1. The script reads the client and financial data from the specified files.
+2. Personal identifiable information is removed from the client data, excluding emails.
+3. Credit card numbers are removed from the financial data.
+4. The data is filtered to include only clients from the specified countries (UK or Netherlands).
+5. Column names are renamed for better readability as follows:
+    - `id` is renamed to `client_identifier`.
+    - btc_a is renamed to bitcoin_address.
+    - cc_t is renamed to credit_card_type.
+6. The filtered and renamed data is saved in the client_data directory.
+7. 
+## Logging
+The application utilizes Loguru's logging module to provide information and error messages during execution.
+
+## Bonus Features
+- The project can be packaged into a source distribution file.
+- A requirements file (requirements.txt) is provided to easily install project dependencies.
+- Code is documented using docstrings in reStructuredText (reST) format to enhance code readability.
