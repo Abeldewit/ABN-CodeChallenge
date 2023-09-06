@@ -53,3 +53,13 @@ if __name__ == "__main__":
         filter_list=country_filter
     )
     
+    ## Sensitive Column Removal ##
+    clean_client_data = functions.remove_columns(
+        selected_client_data,
+        columns=['first_name', 'last_name']
+    )
+    clean_finance_data = functions.remove_columns(
+        dataframe=finance_data,
+        columns='cc_n'
+    )
+    

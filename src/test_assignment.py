@@ -2,6 +2,7 @@ import pytest
 from pyspark.sql import SparkSession
 from functions import load_csv_in_spark
 from functions import filter_column_by_list
+from functions import remove_columns
 
 
 @pytest.fixture(scope="module")
@@ -58,14 +59,14 @@ def test_wrong_file_path(spark_session):
         
         
 ## Data Filtering Tests ##
-test_cases = [
+filter_cases = [
     (['Netherlands'], ['Netherlands']),
     (['Netherlands', 'United Kingdom'], ['Netherlands', 'United Kingdom']),
-    ([None], []),
-    (['Verweggistan'], [])
+    (['Verweggistan'], []),
+    ([None], [])
 ]
 
-@pytest.mark.parametrize("selection, expectation", test_cases) 
+@pytest.mark.parametrize("selection, expectation", filter_cases) 
 def test_different_filters(spark_session, selection, expectation):
     dataset = load_csv_in_spark(
         spark=spark_session,
@@ -87,3 +88,32 @@ def test_different_filters(spark_session, selection, expectation):
     assert sorted(unique_countries) == expectation,\
         f"Filter did not work: {selection}"
     
+    
+## Column Removal Tests ##
+removal_cases = [
+    ('src/input_data/dataset_one.csv', 'first_name', False),
+    ('src/input_data/dataset_one.csv', ['first_name','last_name'], False),
+    ('src/input_data/dataset_one.csv', 'postal_code', True),
+    ('src/input_data/dataset_two.csv', 'cc_n', False),
+    ('src/input_data/dataset_two.csv', ['cc_n'], False),
+    ('src/input_data/dataset_two.csv', ['credit_card'], True)
+]
+
+@pytest.mark.parametrize("file_path,columns_to_remove,expect_to_fail", removal_cases)
+def test_column_removal(spark_session, file_path, columns_to_remove, expect_to_fail):
+    dataset = load_csv_in_spark(spark_session, file_path)
+    
+    if not expect_to_fail:
+        after_removal = sorted([
+            col for col in dataset.columns 
+            if col not in columns_to_remove
+        ])
+        dataset_removed = remove_columns(dataset, columns_to_remove)
+        
+        assert sorted(dataset_removed.columns) == after_removal,\
+            "Column removal not successful"
+    
+    elif expect_to_fail:
+        with pytest.raises(ValueError):
+            remove_columns(dataset, columns_to_remove)
+        
