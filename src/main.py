@@ -77,3 +77,15 @@ if __name__ == "__main__":
         'cc_t': 'credit_card_type'
     }
     final_dataframe = functions.rename_columns(final_dataframe, column_mapping)
+    
+    ## Output final dataframe ##
+    final_dataframe\
+        .write\
+        .option('header', True)\
+        .csv(
+            path='client_data/',
+            mode='overwrite' # This option is used for testing but is normally dangerous
+        )
+        
+    
+    
