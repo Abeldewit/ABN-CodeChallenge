@@ -161,5 +161,7 @@ cython_debug/
 .python-version
 .vscode/launch.json
 *.DS_Store
-src/client_data/*
-
+src/dist
+*.egg-info
+client_data/*
+input_data/*

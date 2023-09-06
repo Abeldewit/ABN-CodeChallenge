@@ -1,0 +1,25 @@
+[build-system]
+requires = [
+    "setuptools>=61.0",
+    "loguru==0.7.1",
+    "pyarrow==13.0.0",
+    "pyspark==3.4.1"
+]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "kommatipara"
+version = "1.0.0"
+authors = [
+  { name="Abel de Wit", email="abeldewit@duck.com" },
+]
+description = "A pipeline package for the ABN Challenge"
+requires-python = ">=3.8"
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+]
+
+[project.urls]
+"Homepage" = "https://github.com/Abeldewit/ABN-CodeChallenge"
