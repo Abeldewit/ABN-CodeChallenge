@@ -63,3 +63,17 @@ if __name__ == "__main__":
         columns='cc_n'
     )
     
+    ## Join the two datasets ##
+    final_dataframe = clean_client_data.join(
+        other=clean_finance_data,
+        on='id',
+        how='left' # only id's of selected countries
+    )
+    
+    ## Rename Finance Columns ##
+    column_mapping = {
+        'id': 'client_identifier',
+        'btc_a': 'bitcoin_address',
+        'cc_t': 'credit_card_type'
+    }
+    final_dataframe = functions.rename_columns(final_dataframe, column_mapping)
