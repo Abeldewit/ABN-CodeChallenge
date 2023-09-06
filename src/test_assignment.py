@@ -3,6 +3,7 @@ from pyspark.sql import SparkSession
 from functions import load_csv_in_spark
 from functions import filter_column_by_list
 from functions import remove_columns
+from functions import rename_columns
 
 
 @pytest.fixture(scope="module")
@@ -117,3 +118,30 @@ def test_column_removal(spark_session, file_path, columns_to_remove, expect_to_f
         with pytest.raises(ValueError):
             remove_columns(dataset, columns_to_remove)
         
+## Column Renaming Tests
+rename_cases = [
+    (
+        'src/input_data/dataset_two.csv',
+        {
+            'id': 'client_identifier',
+            'btc_a': 'bitcoin_address',
+            'cc_t': 'credit_card_type'
+        },
+        ['client_identifier', 'bitcoin_address', 'credit_card_type', 'cc_n']
+    ),
+    (
+        'src/input_data/dataset_one.csv',
+        {
+            'first_name': 'fname',
+            'last_name': 'lname',
+        },
+        ['id', 'fname', 'lname', 'email', 'country']
+    )
+]
+
+@pytest.mark.parametrize("file_path,mapping,expected_cols", rename_cases)
+def test_column_renaming(spark_session, file_path, mapping, expected_cols):
+    dataset = load_csv_in_spark(spark_session, file_path)
+    
+    renamed_df = rename_columns(dataset, mapping)
+    assert sorted(renamed_df.columns) == sorted(expected_cols), "Column renaming failed"

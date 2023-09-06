@@ -1,5 +1,6 @@
-from typing import List, Union
+from typing import Dict, List, Union
 from pyspark.sql import SparkSession
+import pyspark.sql.functions as F
 from pyspark.sql.dataframe import DataFrame
 from pathlib import Path
 
@@ -79,3 +80,21 @@ def remove_columns(dataframe: DataFrame, columns: Union[str, List[str]]) -> Data
         return dataframe.drop(*columns)
     else:
         raise ValueError("Columns to be dropped are not a string or list")
+    
+def rename_columns(dataframe: DataFrame, column_mapping: Dict[str, str]) -> DataFrame:
+    """
+    Rename columns of a dataframe using a mapping from old to new.
+    
+    :param dataframe: The dataframe of which columns will be renamed.
+    :param column_mapping:
+        A dictionary with keys of old column names and values as new column names.
+    """
+    
+    # Now we generate a list of columns where the columns that are to be renamed
+    # get an `.alias` added, and others are just selected as they are
+    return dataframe.select(*(
+            F.col(column).alias(column_mapping[column])
+            if column in column_mapping.keys() 
+            else F.col(column)
+            for column in dataframe.columns
+    ))
