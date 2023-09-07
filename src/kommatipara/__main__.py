@@ -21,12 +21,19 @@ if __name__ == "__main__":
     parser.add_argument('client_csv')
     parser.add_argument('finance_csv')
     parser.add_argument('-f', '--filter', nargs='+', required=False)
+    parser.add_argument(
+        '-c', '--clean', 
+        action='store_true',
+        required=False
+    )
     
     # Parse the arguments
     args = parser.parse_args()
     client_data_path = args.client_csv
     finance_data_path = args.finance_csv
     country_filter = args.filter
+    clean_data = args.clean
+    print(clean_data)
     
     if country_filter is not None:
         # Check if the arguments are country codes
@@ -59,14 +66,29 @@ if __name__ == "__main__":
     )
     
     ## Sensitive Column Removal ##
-    clean_client_data = utils.remove_columns(
-        selected_client_data,
-        columns=['first_name', 'last_name']
-    )
-    clean_finance_data = utils.remove_columns(
-        dataframe=finance_data,
-        columns='cc_n'
-    )
+    if not clean_data:
+        clean_client_data = utils.remove_columns(
+            dataframe=selected_client_data,
+            columns=['first_name', 'last_name']
+        )
+        clean_finance_data = utils.remove_columns(
+            dataframe=finance_data,
+            columns='cc_n'
+        )
+    elif clean_data:
+        # We mask the data instead of outright removing it
+        clean_client_data = utils.mask_sensitive_data(
+            dataframe=selected_client_data,
+            columns=['last_name'],
+            mask_start=1,  # Only retain the first letter of the name
+            mask_char=' '
+        )
+        
+        clean_finance_data = utils.mask_sensitive_data(
+            dataframe=finance_data,
+            columns='cc_n',
+            mask_end=-4 # Only retrain the last four digits of the names
+        )
     
     ## Join the two datasets ##
     joined_dataframe = clean_client_data.join(
@@ -81,7 +103,8 @@ if __name__ == "__main__":
     column_mapping = {
         'id': 'client_identifier',
         'btc_a': 'bitcoin_address',
-        'cc_t': 'credit_card_type'
+        'cc_t': 'credit_card_type',
+        'cc_n': 'credit_card_number'
     }
     final_dataframe = utils.rename_columns(joined_dataframe, column_mapping)
     

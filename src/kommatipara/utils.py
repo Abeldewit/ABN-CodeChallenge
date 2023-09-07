@@ -1,6 +1,7 @@
 from typing import Dict, List, Union
 from pyspark.sql import SparkSession
 import pyspark.sql.functions as F
+from pyspark.sql.types import StringType
 from pyspark.sql.dataframe import DataFrame
 from pathlib import Path
 from loguru import logger
@@ -120,3 +121,53 @@ def rename_columns(dataframe: DataFrame, column_mapping: Dict[str, str]) -> Data
     logger.debug(f"\tColumns before: {dataframe.columns}")
     logger.debug(f"\tColumns after: {renamed_df.columns}")
     return renamed_df
+
+def mask_sensitive_data(
+    dataframe: DataFrame, 
+    columns: Union[str, List[str]],
+    mask_start: int = 0, mask_end: int = None, 
+    mask_char: str = '*'
+) -> DataFrame:
+    """
+    Mask sensitive information in one or more columns using a mask
+    character and a specified start and end point. 
+    The default start and end values will mask the whole value in the column. 
+    
+    :param dataframe: The dataframe containing data to be masked
+    :param columns: The column (str) or columns (list) to be masked.
+    :param mask_start: Starting point for the mask.
+    :param mask_end: End point for the mask.
+    :param mask_char: 
+        The placeholder character for the mask,
+        use a space to remove the characters.
+    """
+    if isinstance(columns, str):
+        # Make it a list for the list-comprehension later
+        columns = [columns]
+    elif not isinstance(columns, list):
+        logger.error("Columns argument neither str or list, can't continue")
+        raise ValueError()
+    
+    # Set op the masking user defined function
+    def mask_value(val, start, end, char):
+        unmasked_start = val[:start]
+        masked = (char*len(val[start:end])).strip()
+        unmasked_end = val[end:] if end is not None else ''
+        return unmasked_start + masked + unmasked_end
+    
+    mask_udf = F.udf(
+        lambda x: mask_value(x, mask_start, mask_end, char=mask_char), 
+        StringType()
+    )
+    
+    # Use the udf on the columns that need to be masked
+    masked_df = dataframe.select(*(
+        mask_udf(F.col(col)).alias(col)
+        if col in columns
+        else F.col(col)
+        for col in dataframe.columns
+    ))
+    logger.debug(f"Successfully masked columns: {columns}")
+    return masked_df
+    
+    
