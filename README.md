@@ -29,6 +29,12 @@ python -m kommatipara <client_data_file_path> <financial_data_file_path> <countr
 `<financial_data_file_path>`: The path to the CSV file containing financial information.
 `<country_filter>`: The country filter to specify the target countries (e.g., "UK" or "Netherlands").
 
+Explanation for these arguments can also be brought up using:
+
+```bash
+python -m kommatipara --help
+```
+
 alternatively you can run the `__main__.py` file directly without installing the package. First install the project dependencies using:
 
 ```bash
@@ -67,8 +73,10 @@ The project is organized as follows:
 7. 
 ## Logging
 The application utilizes Loguru's logging module to provide information and error messages during execution.
+The logs are written to the `logs/` directory, with a rotation policy of 10 minutes. 
 
 ## Bonus Features
 - The project can be packaged into a source distribution file.
 - A requirements file (requirements.txt) is provided to easily install project dependencies.
 - Code is documented using docstrings in reStructuredText (reST) format to enhance code readability.
+- If possible log to a file with a rotating policy.

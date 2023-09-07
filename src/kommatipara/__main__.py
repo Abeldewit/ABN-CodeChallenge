@@ -3,6 +3,8 @@ import country_converter as coco
 from loguru import logger
 import argparse
 
+logger.add("./logs/kommatipara_pipe.log", rotation="10 minutes")
+
 
 if __name__ == "__main__":
     logger.info("Started KommatiPara marketing pipeline")
@@ -39,19 +41,15 @@ if __name__ == "__main__":
     ## Create Spark Session ## 
     spark = utils.create_spark_session("ABN_Challenge")
     
-    
     ## Data Loading ## 
     client_data = utils.load_csv_in_spark(
         spark=spark,
         file_path=client_data_path
     )
-    logger.info(f"Read file: {client_data_path}")
     finance_data = utils.load_csv_in_spark(
         spark=spark,
         file_path=finance_data_path
     )
-    logger.info(f"Read file: {finance_data_path}")
-    
     
     ## Data Filtering ## 
     selected_client_data = utils.filter_column_by_list(
@@ -59,24 +57,16 @@ if __name__ == "__main__":
         column_name='country',
         filter_list=country_filter
     )
-    logger.info(f"Client data filtered on countries: {country_filter}")
-    
     
     ## Sensitive Column Removal ##
-    remove_client = ['first_name', 'last_name']
     clean_client_data = utils.remove_columns(
         selected_client_data,
-        columns=remove_client
+        columns=['first_name', 'last_name']
     )
-    logger.info(f"Client data columns removed: {remove_client}")
-    
-    remove_finance = 'cc_n'
     clean_finance_data = utils.remove_columns(
         dataframe=finance_data,
-        columns=remove_finance
+        columns='cc_n'
     )
-    logger.info(f"Finance data columns removed: {remove_finance}")
-    
     
     ## Join the two datasets ##
     joined_dataframe = clean_client_data.join(
@@ -84,7 +74,7 @@ if __name__ == "__main__":
         on='id',
         how='left' # only id's of selected countries
     )
-    logger.info("Joined datasets on 'id' column.")
+    logger.trace("Joined datasets on 'id' column.")
     
     
     ## Rename Finance Columns ##
@@ -94,9 +84,6 @@ if __name__ == "__main__":
         'cc_t': 'credit_card_type'
     }
     final_dataframe = utils.rename_columns(joined_dataframe, column_mapping)
-    logger.info("Renamed columns in final dataframe")
-    logger.debug(f"Join columns: {joined_dataframe.columns}")
-    logger.debug(f"Rename columns: {final_dataframe.columns}")
     
     ## Output final dataframe ##
     output_file_path = './client_data/'
@@ -107,7 +94,7 @@ if __name__ == "__main__":
             path=output_file_path,
             mode='overwrite' # This option is used for testing but is normally dangerous
         )
-    logger.info(f"Written final dataset to: {output_file_path}")
+    logger.success(f"Written final dataset to: {output_file_path}")
         
     
     
