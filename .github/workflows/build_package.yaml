@@ -18,6 +18,10 @@ jobs:
           python -m pip install --upgrade pip
           pip install ruff pytest pytest-md build
           if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
+      - name: Build package
+        run:  |
+        python -m build src/
+        python -m pip install src/dist/kommatipara-1.0.0-py3-none-any.whl
       - name: Run pytest
         uses: pavelzw/pytest-action@v2
         with:
@@ -27,5 +31,3 @@ jobs:
           custom-arguments: '-q'
           click-to-expand: true
           report-title: 'Test Report'
-      - name: Build package
-        run: python -m build ./src/
