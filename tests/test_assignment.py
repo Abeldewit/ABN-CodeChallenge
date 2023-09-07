@@ -1,6 +1,9 @@
 import pytest
 from pyspark.sql import SparkSession
-from kommatipara.utils import *
+from kommatipara import utils
+
+DS_ONE = './input_data/dataset_one.csv'
+DS_TWO = './input_data/dataset_two.csv'
 
 
 @pytest.fixture(scope="module")
@@ -18,12 +21,12 @@ def spark_session():
 ## Data Loading tests ##
 loading_cases = [
     (
-        'src/input_data/dataset_one.csv', 
+        DS_ONE, 
         1000, 
         ['id', 'first_name', 'last_name', 'email', 'country']
     ),
     (
-        'src/input_data/dataset_two.csv', 
+        DS_TWO, 
         1000, 
         ['id', 'btc_a', 'cc_t', 'cc_n']
     )
@@ -32,7 +35,7 @@ loading_cases = [
 @pytest.mark.parametrize("file_path,row_count,column_names", loading_cases)
 def test_data_loading(spark_session, file_path, row_count, column_names):
     """Tests for the correct properties of both datasets"""
-    dataset = load_csv_in_spark(
+    dataset = utils.load_csv_in_spark(
         spark_session, file_path=file_path
     )
 
@@ -48,9 +51,9 @@ def test_data_loading(spark_session, file_path, row_count, column_names):
      
 def test_wrong_file_path(spark_session):
     # Test if a false file path throws an error
-    with pytest.raises(AssertionError):
+    with pytest.raises(ValueError):
         false_datapath = 'src/input_data/dataset_none.csv'
-        load_csv_in_spark(
+        utils.load_csv_in_spark(
             spark=spark_session, 
             file_path=false_datapath
         )
@@ -66,12 +69,12 @@ filter_cases = [
 
 @pytest.mark.parametrize("selection, expectation", filter_cases) 
 def test_different_filters(spark_session, selection, expectation):
-    dataset = load_csv_in_spark(
+    dataset = utils.load_csv_in_spark(
         spark=spark_session,
-        file_path='src/input_data/dataset_one.csv'
+        file_path=DS_ONE
     ) 
 
-    filtered_df = filter_column_by_list(
+    filtered_df = utils.filter_column_by_list(
         dataframe=dataset,
         column_name='country',
         filter_list=selection
@@ -89,36 +92,36 @@ def test_different_filters(spark_session, selection, expectation):
     
 ## Column Removal Tests ##
 removal_cases = [
-    ('src/input_data/dataset_one.csv', 'first_name', False),
-    ('src/input_data/dataset_one.csv', ['first_name','last_name'], False),
-    ('src/input_data/dataset_one.csv', 'postal_code', True),
-    ('src/input_data/dataset_two.csv', 'cc_n', False),
-    ('src/input_data/dataset_two.csv', ['cc_n'], False),
-    ('src/input_data/dataset_two.csv', ['credit_card'], True)
+    (DS_ONE, 'first_name', False),
+    (DS_ONE, ['first_name','last_name'], False),
+    (DS_ONE, 'postal_code', True),
+    (DS_TWO, 'cc_n', False),
+    (DS_TWO, ['cc_n'], False),
+    (DS_TWO, ['credit_card'], True)
 ]
 
 @pytest.mark.parametrize("file_path,columns_to_remove,expect_to_fail", removal_cases)
 def test_column_removal(spark_session, file_path, columns_to_remove, expect_to_fail):
-    dataset = load_csv_in_spark(spark_session, file_path)
+    dataset = utils.load_csv_in_spark(spark_session, file_path)
     
     if not expect_to_fail:
         after_removal = sorted([
             col for col in dataset.columns 
             if col not in columns_to_remove
         ])
-        dataset_removed = remove_columns(dataset, columns_to_remove)
+        dataset_removed = utils.remove_columns(dataset, columns_to_remove)
         
         assert sorted(dataset_removed.columns) == after_removal,\
             "Column removal not successful"
     
     elif expect_to_fail:
         with pytest.raises(ValueError):
-            remove_columns(dataset, columns_to_remove)
+            utils.remove_columns(dataset, columns_to_remove)
         
 ## Column Renaming Tests
 rename_cases = [
     (
-        'src/input_data/dataset_two.csv',
+        DS_TWO,
         {
             'id': 'client_identifier',
             'btc_a': 'bitcoin_address',
@@ -127,7 +130,7 @@ rename_cases = [
         ['client_identifier', 'bitcoin_address', 'credit_card_type', 'cc_n']
     ),
     (
-        'src/input_data/dataset_one.csv',
+        DS_ONE,
         {
             'first_name': 'fname',
             'last_name': 'lname',
@@ -138,7 +141,7 @@ rename_cases = [
 
 @pytest.mark.parametrize("file_path,mapping,expected_cols", rename_cases)
 def test_column_renaming(spark_session, file_path, mapping, expected_cols):
-    dataset = load_csv_in_spark(spark_session, file_path)
+    dataset = utils.load_csv_in_spark(spark_session, file_path)
     
-    renamed_df = rename_columns(dataset, mapping)
+    renamed_df = utils.rename_columns(dataset, mapping)
     assert sorted(renamed_df.columns) == sorted(expected_cols), "Column renaming failed"

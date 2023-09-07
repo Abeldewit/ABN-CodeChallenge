@@ -164,4 +164,4 @@ cython_debug/
 src/dist
 *.egg-info
 client_data/*
-input_data/*
+logs/

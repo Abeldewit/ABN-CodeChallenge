@@ -3,6 +3,8 @@ from pyspark.sql import SparkSession
 import pyspark.sql.functions as F
 from pyspark.sql.dataframe import DataFrame
 from pathlib import Path
+from loguru import logger
+
 
 def create_spark_session(app_name: str) -> SparkSession:
     """
@@ -13,6 +15,7 @@ def create_spark_session(app_name: str) -> SparkSession:
     
     :returns: A new active Spark Session
     """
+    logger.debug(f"Creating spark session: {app_name}")
     return (SparkSession.builder
             .master("local")
             .appName(app_name)
@@ -28,12 +31,16 @@ def load_csv_in_spark(spark: SparkSession, file_path: str) -> DataFrame:
     
     :returns: The file's contents in a spark DataFrame
     """
-    assert Path(file_path).exists(), "File does not exist"
-    return (spark.read
+    if not Path(file_path).exists():
+        logger.error("File does not exist.")
+        raise ValueError()
+    dataframe = (spark.read
             .format("csv")
             .option("header", True)
             .load(file_path)
         )
+    logger.debug(f"Successfully read file: {file_path}")
+    return dataframe
     
 def filter_column_by_list(
     dataframe: DataFrame, 
@@ -52,12 +59,15 @@ def filter_column_by_list(
     """
     # Error handling
     if column_name not in dataframe.columns:
-        raise ValueError("Column name not present in dataframe.")
+        logger.error("Column name not present in dataframe.")
+        raise ValueError()
     if not isinstance(filter_list, list):
+        logger.error("Provided filter_list is not a list.")
         raise ValueError("Provided filter_list is not a list.")
 
     # Select the wanted rows using filter
     filtered_df = dataframe.filter(dataframe[column_name].isin(filter_list))
+    logger.debug(f"Data filtered on: {filter_list}")
     return filtered_df
 
 def remove_columns(dataframe: DataFrame, columns: Union[str, List[str]]) -> DataFrame:
@@ -71,15 +81,22 @@ def remove_columns(dataframe: DataFrame, columns: Union[str, List[str]]) -> Data
     """
     if isinstance(columns, str):
         if columns not in dataframe.columns:
-            raise ValueError("Column to be dropped not present in dataframe.")
+            logger.error("Column to be dropped not present in dataframe.")
+            raise ValueError()
         # If the column is present, it can be dropped and the df returned.
-        return dataframe.drop(columns)
+        df_dropped = dataframe.drop(columns)
+        logger.debug(f"Column(s) successfully removed: {columns}")
+        return df_dropped
     elif isinstance(columns, list):
         if not all([col in dataframe.columns for col in columns]):
-            raise ValueError("Not all columns to be dropped are in the dataframe.")
-        return dataframe.drop(*columns)
+            logger.error("Not all columns to be dropped are in the dataframe.")
+            raise ValueError()
+        df_dropped = dataframe.drop(*columns)
+        logger.debug(f"Column(s) successfully removed: {columns}")
+        return df_dropped
     else:
-        raise ValueError("Columns to be dropped are not a string or list")
+        logger.error("Columns to be dropped are not str or list")
+        raise ValueError()
     
 def rename_columns(dataframe: DataFrame, column_mapping: Dict[str, str]) -> DataFrame:
     """
@@ -89,12 +106,17 @@ def rename_columns(dataframe: DataFrame, column_mapping: Dict[str, str]) -> Data
     :param column_mapping:
         A dictionary with keys of old column names and values as new column names.
     """
-    
+    if not all([col in dataframe.columns for col in column_mapping.keys()]):
+        logger.warning("Some of the columns in the mapping are not present in de dataframe.")
     # Now we generate a list of columns where the columns that are to be renamed
     # get an `.alias` added, and others are just selected as they are
-    return dataframe.select(*(
+    renamed_df = dataframe.select(*(
             F.col(column).alias(column_mapping[column])
             if column in column_mapping.keys() 
             else F.col(column)
             for column in dataframe.columns
     ))
+    logger.debug("Renamed columns in dataframe")
+    logger.debug(f"\tColumns before: {dataframe.columns}")
+    logger.debug(f"\tColumns after: {renamed_df.columns}")
+    return renamed_df
