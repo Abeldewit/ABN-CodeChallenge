@@ -22,12 +22,13 @@ python -m build ./src/
 After installing the package, you can run the pipeline with the following command:
 
 ```bash
-python -m kommatipara <client_data_file_path> <financial_data_file_path> <country_filter>
+python -m kommatipara <client_data_file_path> <financial_data_file_path> -f/--filter <country_filter> -c/--clean
 ```
 
 `<client_data_file_path>`: The path to the CSV file containing client information.
 `<financial_data_file_path>`: The path to the CSV file containing financial information.
-`<country_filter>`: The country filter to specify the target countries (e.g., "UK" or "Netherlands").
+`-f/--filter <country_filter>`: The country filter to specify the target countries (e.g., "UK" or "Netherlands").
+`-c/--clean`: Instead of removing sensitive information, marketing department might for example still want to use first names in email correspondence, this argument enable masking of the sensitive data.
 
 Explanation for these arguments can also be brought up using:
 
